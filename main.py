@@ -4,16 +4,13 @@ from constants import FEATURE_NAMES, EDIBILITY_CLASS
 from typing import List
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import LabelEncoder
-from sklearn.metrics import confusion_matrix, precision_score, recall_score
+from sklearn.metrics import classification_report
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.ensemble import RandomForestClassifier
-from sklearn.linear_model import LogisticRegression
 import random
 import seaborn as sns
 import matplotlib.pyplot as plt
 import numpy as np
-import os
-import shap
 import xgboost
 
 FILE_PATH = 'data/mushroom/agaricus-lepiota.data'
@@ -112,7 +109,7 @@ class MushroomEdibilityModel:
         """
         Trains the machine learning model on the prepared training data.
         """
-        model.fit(self.data_train, self.label_train)
+        self.model.fit(self.data_train, self.label_train)
 
     def evaluate(self):
         """
@@ -121,9 +118,9 @@ class MushroomEdibilityModel:
         Returns:
             confusion_matrix: A confusion matrix representing the model's performance.
         """
-        label_predicted = model.predict(self.data_test)
-        conf_matrix = confusion_matrix(self.label_test, label_predicted)
-        return conf_matrix
+        label_predicted = self.model.predict(self.data_test)
+        mushroom_classification_report = classification_report(self.label_test, label_predicted)
+        return mushroom_classification_report
 
 
     def plot_feature_importance_for_model(self):
@@ -154,7 +151,6 @@ if __name__ == '__main__':
     df = get_mushroom_features_table(FILE_PATH, FEATURE_NAMES)
 
     model = RandomForestClassifier(random_state=4)
-    # model = xgboost.XGBClassifier(random_state=4) 
     
     mushroom_edibility = MushroomEdibilityModel(model, df, 'poisonous', 'p')
     
