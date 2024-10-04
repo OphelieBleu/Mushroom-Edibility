@@ -5,17 +5,14 @@ from typing import List
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import LabelEncoder
 from sklearn.metrics import classification_report
-from sklearn.tree import DecisionTreeClassifier
 from sklearn.ensemble import RandomForestClassifier
-import random
 import seaborn as sns
 import matplotlib.pyplot as plt
-import numpy as np
-import xgboost
 
-FILE_PATH = 'data/mushroom/agaricus-lepiota.data'
+FILE_PATH = "data/mushroom/agaricus-lepiota.data"
 
-def get_mushroom_features_table(file_path, features: List[str]=None) -> pd.DataFrame:
+
+def get_mushroom_features_table(file_path, features: List[str] = None) -> pd.DataFrame:
     """
     Reads a file containing mushroom data and returns a pandas DataFrame.
 
@@ -33,8 +30,8 @@ def get_mushroom_features_table(file_path, features: List[str]=None) -> pd.DataF
         IOError: If there's an unexpected error while opening or reading the file.
     """
     try:
-        with open(file_path, 'r') as file:
-            data = [line.strip().split(',') for line in file]
+        with open(file_path, "r") as file:
+            data = [line.strip().split(",") for line in file]
     except FileNotFoundError as e:
         raise FileNotFoundError(f"File not found: {file_path}")
     except PermissionError as e:
@@ -74,7 +71,7 @@ def get_encoded_df(features_table: pd.DataFrame) -> pd.DataFrame:
         encoded_df[col] = label_encoder.fit_transform(features_table[col])
     return encoded_df
 
-# MushroomEdibilityModel blabla
+
 class MushroomEdibilityModel:
     """
     Machine learning model for predicting mushroom edibility and get feature importance.
@@ -88,7 +85,14 @@ class MushroomEdibilityModel:
         label_train (pd.Series): Series containing encoded edibility labels for training data.
         label_test (pd.Series): Series containing encoded edibility labels for testing data.
     """
-    def __init__(self, model: object, features_table: pd.DataFrame, label_column: str, positive_label: str='p'):
+
+    def __init__(
+        self,
+        model: object,
+        features_table: pd.DataFrame,
+        label_column: str,
+        positive_label: str = "p",
+    ):
         """
         Initializes the MushroomEdibilityModel object.
 
@@ -103,7 +107,11 @@ class MushroomEdibilityModel:
         encoded_label = encode_edibility(labels, positive_label)
         encoded_data = get_encoded_df(features_table_without_label)
         self.model = model
-        self.data_train, self.data_test, self.label_train, self.label_test = train_test_split(encoded_data, encoded_label, test_size = 0.25, random_state = 4)
+        self.data_train, self.data_test, self.label_train, self.label_test = (
+            train_test_split(
+                encoded_data, encoded_label, test_size=0.25, random_state=4
+            )
+        )
 
     def train(self):
         """
@@ -119,41 +127,48 @@ class MushroomEdibilityModel:
             confusion_matrix: A confusion matrix representing the model's performance.
         """
         label_predicted = self.model.predict(self.data_test)
-        mushroom_classification_report = classification_report(self.label_test, label_predicted)
+        mushroom_classification_report = classification_report(
+            self.label_test, label_predicted
+        )
         return mushroom_classification_report
-
 
     def plot_feature_importance_for_model(self):
         """
         Visualizes the feature importance for the trained model.
-    
+
         This method assumes the model being used has a `feature_importances_` attribute or similar functionality to extract feature importance scores.
-    
+
         Raises:
             AttributeError: If the model object lacks a `feature_importances_` attribute.
         """
         try:
             # Sort feature importances and column names together by importance
-            sorted_features = sorted(zip(self.data_train.columns, self.model.feature_importances_), key=lambda x: x[1], reverse=True)
+            sorted_features = sorted(
+                zip(self.data_train.columns, self.model.feature_importances_),
+                key=lambda x: x[1],
+                reverse=True,
+            )
             feature_names, importances = zip(*sorted_features)
-    
+
             plt.figure(figsize=(10, 6))
             sns.barplot(x=importances, y=feature_names)
-            plt.xlabel('Feature Importance')
-            plt.ylabel('Feature')
-            plt.title('Feature Importance Plot')
+            plt.xlabel("Feature Importance")
+            plt.ylabel("Feature")
+            plt.title("Feature Importance Plot")
             plt.show()
         except AttributeError:
-            print("The model object does not have a 'feature_importances_' attribute. Feature importance cannot be plotted.")
-        
+            print(
+                "The model object does not have a 'feature_importances_' attribute. Feature importance cannot be plotted."
+            )
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     df = get_mushroom_features_table(FILE_PATH, FEATURE_NAMES)
 
     model = RandomForestClassifier(random_state=4)
-    
-    mushroom_edibility = MushroomEdibilityModel(model, df, 'poisonous', 'p')
-    
+
+    mushroom_edibility = MushroomEdibilityModel(model, df, EDIBILITY_CLASS, "p")
+
     mushroom_edibility.train()
     print(mushroom_edibility.evaluate())
     mushroom_edibility.plot_feature_importance_for_model()
